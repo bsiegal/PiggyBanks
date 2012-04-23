@@ -206,7 +206,7 @@ function Piggy(/*String*/ label, /*int*/ x) {
             coin.coin.moveTo(PiggyBanks.coinLayer);
             PiggyBanks.dragLayer.draw();
             PiggyBanks.coinLayer.draw();
-            coin.transitionBack();
+            coin.transitionBack('back-ease-in');
             
         } else {
             this.runningTotal += coin.value;
@@ -445,18 +445,19 @@ function Coin(/*String*/ coinType) {
         this.coin.attrs.y = y;
     };
     
-    this.transitionBack = function(/*function*/callback) {
+    this.transitionBack = function(/*String*/ easing, /*function*/callback) {
         this.coin.transitionTo({
             x: this.x,
             y: this.y,
             duration: 0.3,
-            callback: callback
+            callback: callback,
+            easing: easing
         });
     };
     
     this.breakCoin = function() {
         var thiz = this;
-        this.transitionBack(function() {
+        this.transitionBack('strong-ease-in-out', function() {
             thiz.coin.moveTo(PiggyBanks.coinLayer);
 
             if (thiz.value !== 1) {
@@ -552,9 +553,15 @@ var PiggyBanks = {
     resize: function() {
         /*
          * STAGE_WIDTH is fixed at 1000 (on mobile, it's fixed by viewport)
-         * STAGE_HEIGHT is min 600
+         * STAGE_HEIGHT is min 500
          */
-        
+//        var height = $(window).innerHeight();
+//        if (PiggyBanks.stage) {
+//            PiggyBanks.stage.setSize(STAGE_WIDTH, STAGE_HEIGHT);
+//            PiggyBanks.stage.draw();
+//        }
+//        PiggyBanks.consoleLog('height = ' + height);
+
     },
     
     initLayers: function() {
@@ -745,8 +752,6 @@ var PiggyBanks = {
     },
     
     reInit: function() {
-//        window.location.reload();
-        
         /*
          * for each piggy, remove coins from group (clearing most of bankLayer)
          * 
