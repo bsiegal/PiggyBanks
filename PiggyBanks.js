@@ -16,37 +16,39 @@
  *
  ******************************************************************************/
 
-PENNY = 'penny.png';
-NICKEL = 'nickel.png';
-DIME = 'dime.png';
-QUARTER = 'quarter.png';
-PIGGY = 'piggybank-555px.png';
-IMG_FILES = [PENNY, NICKEL, DIME, QUARTER, PIGGY];
-PIGGY_ASPECT_RATIO = 555/574;
-SLOT_TOLERANCE_Y = 75;
-SLOT_TOLERANCE_X = 35;
-PIGGY_WIDTH = 300;
-PIGGY_HEIGHT = PIGGY_WIDTH / PIGGY_ASPECT_RATIO;
-PADDING = 50;
-STAGE_WIDTH = 1000;
-STAGE_HEIGHT = 600;
-CENTERX = STAGE_WIDTH / 2;
-CENTERY = STAGE_HEIGHT / 2;
-THOUGHT_WIDTH = STAGE_WIDTH - 4 * PADDING;
-THOUGHT_HEIGHT = STAGE_HEIGHT - PIGGY_HEIGHT - 2 * PADDING;
-COIN_PADDING = 4;
-QUARTER_WIDTH = 58;
-BUBBLES = 8;
+var PENNY = 'penny.png';
+var NICKEL = 'nickel.png';
+var DIME = 'dime.png';
+var QUARTER = 'quarter.png';
+var PIGGY = 'piggybank-555px.png';
+var IMG_FILES = [PENNY, NICKEL, DIME, QUARTER, PIGGY];
+var PIGGY_ASPECT_RATIO = 555/574;
+var SLOT_TOLERANCE_Y = 75;
+var SLOT_TOLERANCE_X = 35;
+var QUARTER_WIDTH = 58;
+var BUBBLES = 8;
+var BORDER = 40;
+
+//set in PiggyBanks.resize
+var STAGE_WIDTH = null;
+var STAGE_HEIGHT = null;
+var PADDING = null;
+var CENTERX = null;
+var CENTERY = null;
+var THOUGHT_WIDTH = null;
+var THOUGHT_HEIGHT = null;
+var PIGGY_WIDTH = null;
+var PIGGY_HEIGHT = null;
+var COIN_PADDING = null;
 
 function Piggy(/*String*/ label, /*int*/ x) {
     this.x = x;
-    this.y = STAGE_HEIGHT - PIGGY_HEIGHT;
-    this.slotPosition = {x: x + PIGGY_WIDTH / 2 - 3, y : this.y};
     this.runningTotal = 0;
     this.label = label;
     this.thoughtShowing = false;
     
     this.init = function() {
+        this.initY();
         
         var group = new Kinetic.Group();
         
@@ -59,7 +61,7 @@ function Piggy(/*String*/ label, /*int*/ x) {
             width: PIGGY_WIDTH,
             height: PIGGY_HEIGHT,
             image: PiggyBanks.images[PIGGY],
-            name: label
+            name: 'piggy'
         });
         var thiz = this;
         group.add(piggy);
@@ -71,12 +73,13 @@ function Piggy(/*String*/ label, /*int*/ x) {
         var text = new Kinetic.Text({
             x: x + 2 * PIGGY_WIDTH / 3,
             y: STAGE_HEIGHT - PIGGY_HEIGHT / 2,
-            fontSize: 18,
+            fontSize: PIGGY_WIDTH > 170 ? 18 : 15,
             fontFamily: 'Calibri',
             textFill: 'black',
             align: 'center',
             verticalAlign: 'middle',
-            text: label
+            text: label,
+            name: 'label'
         });
         group.add(text);
         
@@ -86,13 +89,15 @@ function Piggy(/*String*/ label, /*int*/ x) {
         var cents = new Kinetic.Text({
             x: x + 2 * PIGGY_WIDTH / 3,
             y: STAGE_HEIGHT - PIGGY_HEIGHT / 2 + 18,
-            fontSize: 15,
+            fontSize: PIGGY_WIDTH > 170 ? 15 : 12,
             fontFamily: 'Calibri',
             textFill: 'black',
             padding: 7,
             align: 'center',
             verticalAlign: 'middle',
-            text: ''
+            text: '',
+            name: 'value'
+                
         });
         this.cents = cents;
         group.add(cents);
@@ -120,6 +125,11 @@ function Piggy(/*String*/ label, /*int*/ x) {
         this.piggyGroup = group;
         
         this.initCoinsGroup();
+    };    
+    
+    this.initY = function() {
+        this.y = STAGE_HEIGHT - PIGGY_HEIGHT;    
+        this.slotPosition = {x: this.x + PIGGY_WIDTH / 2 - 5, y : this.y};        
     };
     
     this.initCoinsGroup = function() {
@@ -127,6 +137,7 @@ function Piggy(/*String*/ label, /*int*/ x) {
          * Add the coins group
          */        
         this.coins = new Kinetic.Group();
+        
         var container = new Kinetic.RoundedRect({
             cornerX: CENTERX - THOUGHT_WIDTH / 2,
             cornerY: PADDING,
@@ -138,22 +149,24 @@ function Piggy(/*String*/ label, /*int*/ x) {
             strokeWidth: 4,
             name: 'container'
         });
-        this.coins.add(container);        
-        
+
         for (var i = 0; i < BUBBLES; i++) {
             var bubble = new Kinetic.RoundedRect({
-                cornerX: this.x + 100 + i * (CENTERX - this.x - 100) / BUBBLES,
-                cornerY: this.y + 70 + i * (container.attrs.cornerY + THOUGHT_HEIGHT - this.y - 70) / BUBBLES,
+                cornerX: this.x + PIGGY_WIDTH / 3 + i * (CENTERX - this.x - PIGGY_WIDTH / 3) / BUBBLES,
+                cornerY: this.y + PIGGY_HEIGHT / 4.432 + i * (container.attrs.cornerY + THOUGHT_HEIGHT - this.y - PIGGY_HEIGHT / 4.432) / BUBBLES,
                 radius: 5,
                 height: 10,
                 width: 10 + i * 2,
                 fill: '#f9f685',
                 stroke: 'black',
-                strokeWidth: 2
+                strokeWidth: 2,
+                name: 'bubble'
             });
             this.coins.add(bubble);            
         }
-        
+
+        this.coins.add(container);        
+
         this.coins.hide();
         PiggyBanks.bankLayer.add(this.coins);
         PiggyBanks.bankLayer.draw();
@@ -232,11 +245,12 @@ function Piggy(/*String*/ label, /*int*/ x) {
     };
     
     this.organizeCoins = function() {        
-        var children = this.coins.getChildren();
         
         var container = this.coins.get('.container')[0];
         var x = container.attrs.cornerX + 2 * COIN_PADDING;
         var y = container.attrs.cornerY + COIN_PADDING + QUARTER_WIDTH / 2;
+        
+        var children = this.coins.getChildren();
         
         for (var i = BUBBLES + 1; i < children.length; i++) {
             var c = children[i];
@@ -246,9 +260,19 @@ function Piggy(/*String*/ label, /*int*/ x) {
             
             c.attrs.y = y - c.attrs.imgWidth / 2;
             
+            /*
+             * Wrap the coin to the next line, if necessary
+             */
             if (x + QUARTER_WIDTH > container.attrs.cornerX + container.attrs.width - 2 * COIN_PADDING) {
                 x = container.attrs.cornerX + 2 * COIN_PADDING;
                 y += QUARTER_WIDTH + COIN_PADDING;
+                
+                /*
+                 * Grow the thought container, if necessary
+                 */
+                if (container.attrs.cornerY + container.attrs.height < y) {
+                    container.setHeight(container.getHeight() + QUARTER_WIDTH + 2 * COIN_PADDING);
+                }
             }
 
         }
@@ -336,7 +360,7 @@ function Piggy(/*String*/ label, /*int*/ x) {
         this.showMessage();
         var thiz = this;
         this.piggyGroup.transitionTo({
-            y: -STAGE_HEIGHT / 2,
+            y: -STAGE_HEIGHT + PIGGY_HEIGHT,
             duration: 3,
             easing: 'bounce-ease-in',
             callback: function() {
@@ -348,6 +372,51 @@ function Piggy(/*String*/ label, /*int*/ x) {
             }
         });
 
+    };
+    
+    this.resize = function() {
+        if (this.label === 'Save') {
+            this.x = PIGGY_WIDTH + PADDING;
+        } else if (this.label === 'Give') {
+            this.x = 2 * (PIGGY_WIDTH + PADDING);
+        }
+        this.initY();
+        
+        /*
+         * repositioning/scaling each part of piggyGroup
+         * separately because the text do not shrink. 
+         */
+        var piggy = this.piggyGroup.get('.piggy')[0];
+        piggy.setHeight(PIGGY_HEIGHT);
+        piggy.setWidth(PIGGY_WIDTH);
+        piggy.attrs.x = this.x;
+        piggy.attrs.y = this.y;
+        
+        var label = this.piggyGroup.get('.label')[0];
+        label.attrs.x = this.x + 2 * PIGGY_WIDTH / 3;
+        label.attrs.y = STAGE_HEIGHT - PIGGY_HEIGHT / 2;
+        label.attrs.fontSize = PIGGY_WIDTH > 170 ? 18 : 15;
+
+        var value = this.piggyGroup.get('.value')[0];
+        value.attrs.x = this.x + 2 * PIGGY_WIDTH / 3;
+        value.attrs.y = STAGE_HEIGHT - PIGGY_HEIGHT / 2 + 18;
+        value.attrs.fontSize = PIGGY_WIDTH > 170 ? 15 : 12;
+        /*
+         * resize and reposition thought and bubbles
+         */
+        var container = this.coins.get('.container')[0];
+        container.setHeight(THOUGHT_HEIGHT);
+        container.setWidth(THOUGHT_WIDTH);
+        container.setCornerX(CENTERX - THOUGHT_WIDTH / 2);
+        container.setCornerY(PADDING);
+        
+        var bubbles = this.coins.get('.bubble');
+        for (var i = 0; i < bubbles.length; i++) {
+            bubbles[i].setCornerX(this.x + PIGGY_WIDTH / 3 + i * (CENTERX - this.x - PIGGY_WIDTH / 3) / BUBBLES);
+            bubbles[i].setCornerY(this.y + PIGGY_HEIGHT / 4.432 + i * (container.attrs.cornerY + THOUGHT_HEIGHT - this.y - PIGGY_HEIGHT / 4.432) / BUBBLES);
+        }
+
+        PiggyBanks.piggyLayer.draw();
     };
     
     this.init();
@@ -367,10 +436,13 @@ function Coin(/*String*/ coinType) {
                     47;
     
     this.init = function() {
-        //random location 
+        //random location above the piggies and outside of the changeBreake
         var textBoxHeight = PiggyBanks.changeBreaker.attrs.height;
-        var x = Math.floor(Math.random() * (STAGE_WIDTH - 2 * PADDING));
-        var y = Math.floor(Math.random() * (STAGE_HEIGHT - PIGGY_HEIGHT - PADDING - textBoxHeight) + textBoxHeight);
+        var textBoxWidth = PiggyBanks.changeBreaker.attrs.width;
+        var y = Math.floor(Math.random() * (STAGE_HEIGHT - PIGGY_HEIGHT - SLOT_TOLERANCE_Y));
+        var x = y < PiggyBanks.changeBreaker.attrs.cornerY + textBoxHeight ? 
+                Math.floor(Math.random() * (STAGE_WIDTH - QUARTER_WIDTH - textBoxWidth)) :
+                    Math.floor(Math.random() * (STAGE_WIDTH - QUARTER_WIDTH));
         
         this.x = x;
         this.y = y;
@@ -380,9 +452,11 @@ function Coin(/*String*/ coinType) {
             y: y,
             image: PiggyBanks.images[coinType],
             dragBounds: {
-                bottom: STAGE_HEIGHT - PIGGY_HEIGHT - 30
+                bottom: STAGE_HEIGHT - PIGGY_HEIGHT - SLOT_TOLERANCE_Y / 2
             },
-            imgWidth: this.width
+            imgWidth: this.width,
+            name: 'coin',
+            parent: this
         });
         
         var thiz = this;
@@ -494,7 +568,6 @@ function Coin(/*String*/ coinType) {
             PiggyBanks.dragLayer.draw();
         });
     };
-    
 
     this.init();
 };
@@ -527,8 +600,9 @@ var PiggyBanks = {
     changeBreaker: null,
     
     init: function() {
-        PiggyBanks.loadImages();
+        PiggyBanks.resize();
         PiggyBanks.stage = new Kinetic.Stage({container: 'game', width: STAGE_WIDTH, height: STAGE_HEIGHT});
+        PiggyBanks.loadImages();
                
     },    
         
@@ -539,8 +613,6 @@ var PiggyBanks = {
             var src = IMG_FILES[i];
             var img = new Image();
             img.onload = function() {
-                PiggyBanks.consoleLog('img.onload loadedImages = ' + PiggyBanks.loadedImages);
-                PiggyBanks.consoleLog('img.onload IMG_FILES.length - 1 = ' + (IMG_FILES.length - 1));
                 if (++PiggyBanks.loadedImages === IMG_FILES.length) {
                     PiggyBanks.initLayers();
                 }
@@ -551,17 +623,100 @@ var PiggyBanks = {
     },
     
     resize: function() {
+        PiggyBanks.consoleLog('resize...');
+        var stageWidthOld = STAGE_WIDTH ? STAGE_WIDTH : null;
         /*
-         * STAGE_WIDTH is fixed at 1000 (on mobile, it's fixed by viewport)
-         * STAGE_HEIGHT is min 500
-         */
-//        var height = $(window).innerHeight();
-//        if (PiggyBanks.stage) {
-//            PiggyBanks.stage.setSize(STAGE_WIDTH, STAGE_HEIGHT);
-//            PiggyBanks.stage.draw();
-//        }
-//        PiggyBanks.consoleLog('height = ' + height);
+         * STAGE_WIDTH  is min 360, max 1000
+         * STAGE_HEIGHT is min 275
+         * PIGGY_WIDTH  is max 300
+         */       
+        var width = $(window).innerWidth();
 
+        if (width < 360) {
+            STAGE_WIDTH = 360;
+        } else if (width > 1000 + BORDER) {
+            STAGE_WIDTH = 1000;
+        } else {
+            STAGE_WIDTH = width - BORDER;
+        }
+        CENTERX = STAGE_WIDTH / 2;
+        
+
+        if (STAGE_WIDTH > 900) {
+            PIGGY_WIDTH = 300;
+            PADDING = (STAGE_WIDTH - 3 * PIGGY_WIDTH) / 2;
+        } else if (STAGE_WIDTH > 550){
+            PIGGY_WIDTH = (STAGE_WIDTH - 20) / 3;
+            PADDING = 10;
+        } else {
+            PIGGY_WIDTH = STAGE_WIDTH / 3;
+            PADDING = 0;
+        }
+
+        THOUGHT_WIDTH = STAGE_WIDTH - 4 * PADDING;
+        PIGGY_HEIGHT = PIGGY_WIDTH / PIGGY_ASPECT_RATIO;
+        //heights all set in resize
+        COIN_PADDING = 4;
+
+        var height = $(window).innerHeight() - $('#container').height() - BORDER;
+        
+        if (height > 275) {
+            STAGE_HEIGHT = height;
+        } else {
+            STAGE_HEIGHT = 275;
+        }
+        CENTERY = STAGE_HEIGHT / 2;
+        THOUGHT_HEIGHT = STAGE_HEIGHT - PIGGY_HEIGHT - 2 * PADDING;
+        if (THOUGHT_HEIGHT < QUARTER_WIDTH + 2 * COIN_PADDING) {
+            THOUGHT_HEIGHT = QUARTER_WIDTH + 2 * COIN_PADDING;
+        }
+        $('#game').css('height', STAGE_HEIGHT + 'px').css('width', STAGE_WIDTH + 'px');
+
+        if (PiggyBanks.stage) {
+            
+            PiggyBanks.stage.setSize(STAGE_WIDTH, STAGE_HEIGHT);
+            $('#game .kineticjs-content').css('height', STAGE_HEIGHT + 'px').css('width', STAGE_WIDTH + 'px');
+            PiggyBanks.stage.draw();
+
+            /*
+             * move the changeBreaker
+             */
+            PiggyBanks.changeBreaker.attrs.cornerX = PiggyBanks.changeBreaker.attrs.cornerX + STAGE_WIDTH - stageWidthOld;
+            var cbText = PiggyBanks.piggyLayer.get('.changeBreakerText')[0];
+            cbText.move(STAGE_WIDTH - stageWidthOld, 0);
+
+            /*
+             * resize each piggy
+             */
+            for (var i = 0; i < PiggyBanks.piggies.length; i++) {
+                var o = PiggyBanks.piggies[i].resize();
+            }
+            
+            /*
+             * change dragBounds for any remaining coin in the coinLayer
+             * and also make sure it's within the stage, but not on the changeBreaker
+             */
+            var coinsRemaining = PiggyBanks.coinLayer.getChildren();
+            for (var i = 0; i < coinsRemaining.length; i++) {
+                var c = coinsRemaining[i];
+                c.attrs.dragBounds = {
+                        bottom: STAGE_HEIGHT - PIGGY_HEIGHT - SLOT_TOLERANCE_Y / 2
+                };
+                if (c.attrs.x + c.attrs.imgWidth > STAGE_WIDTH) {
+                    c.attrs.x = STAGE_WIDTH - c.attrs.imgWidth;
+                }
+                if (c.attrs.y + c.attrs.imgWidth > STAGE_HEIGHT - PIGGY_HEIGHT - SLOT_TOLERANCE_Y) {
+                    c.attrs.y = STAGE_HEIGHT - PIGGY_HEIGHT - SLOT_TOLERANCE_Y;
+                }
+                if (c.attrs.y - c.attrs.imgWidth < PiggyBanks.changeBreaker.attrs.cornerY + PiggyBanks.changeBreaker.attrs.height &&
+                        c.attrs.x + c.attrs.imgWidth > PiggyBanks.changeBreaker.attrs.cornerX) {
+                    c.attrs.x = PiggyBanks.changeBreaker.attrs.cornerX - c.attrs.imgWidth;
+                }
+                c.attrs.parent.x = c.attrs.x
+                c.attrs.parent.y = c.attrs.y;
+            }
+            PiggyBanks.coinLayer.draw();
+        }
     },
     
     initLayers: function() {
@@ -604,7 +759,7 @@ var PiggyBanks = {
             align: 'right',
             verticalAlign: 'top',
             padding: 20,
-            lineJoin: 'round'
+            name: 'changeBreakerText'
         });
         PiggyBanks.piggyLayer.add(text);    
 
@@ -622,7 +777,8 @@ var PiggyBanks = {
             strokeWidth: 2,
             width: changeBreakerWidth,
             height: changeBreakerHeight,
-            radius: 30
+            radius: 30,
+            name: 'changeBreaker'
          });
         PiggyBanks.piggyLayer.add(PiggyBanks.changeBreaker);
         text.moveToTop();
@@ -636,11 +792,7 @@ var PiggyBanks = {
         var total = 0;
         var c;
         for (var i = 0, len = Math.floor(Math.random() * level); i < len; i++) {
-            c = new Coin(QUARTER);
-            total += c.value;
-        }
-        for (var i = 0, len = Math.floor(Math.random() * level); i < len; i++) {
-            c = new Coin(DIME);
+            c = new Coin(PENNY);
             total += c.value;
         }
         for (var i = 0, len = Math.floor(Math.random() * level); i < len; i++) {
@@ -648,19 +800,20 @@ var PiggyBanks = {
             total += c.value;
         }
         for (var i = 0, len = Math.floor(Math.random() * level); i < len; i++) {
-            c = new Coin(PENNY);
+            c = new Coin(DIME);
+            total += c.value;
+        }
+        for (var i = 0, len = Math.floor(Math.random() * level); i < len; i++) {
+            c = new Coin(QUARTER);
             total += c.value;
         }
         
         //total must be divide evenly by 4?
         var mod = total % 4;
-        PiggyBanks.consoleLog('total = ' + total);
-        PiggyBanks.consoleLog('mod = ' + mod);
         if (mod !== 0) {
             for (var i = 0, len = 4 - mod; i < len; i++) {
                 c = new Coin(PENNY);
                 total += c.value;
-                PiggyBanks.consoleLog('total = ' + total);
             }
         }
         
@@ -708,7 +861,7 @@ var PiggyBanks = {
         /*
          * anywhere in the corner where the changeBreaker text is
          */
-        if (a.x > STAGE_WIDTH - PiggyBanks.changeBreaker.attrs.cornerX && a.y < PiggyBanks.changeBreaker.attrs.height) { 
+        if (a.x + coin.width > PiggyBanks.changeBreaker.attrs.cornerX && a.y < PiggyBanks.changeBreaker.attrs.height) { 
             PiggyBanks.consoleLog('isMakeChange true');
             return true;        
         }
@@ -739,7 +892,6 @@ var PiggyBanks = {
     },
         
     clearThought: function() {
-        PiggyBanks.consoleLog('clearThought...');
         if (PiggyBanks.thoughtTimer) {
             clearTimeout(PiggyBanks.thoughtTimer);
         }
@@ -809,8 +961,11 @@ $(function() {
         }
     });
 
+    $('html,body').animate({scrollTop: $('#title').offset().top}, 'fast');
+    
     $(window).resize(function() {
         PiggyBanks.resize();
+        $('html,body').animate({scrollTop: $('#title').offset().top}, 'fast');
     });
     
     PiggyBanks.init();
