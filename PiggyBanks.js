@@ -671,6 +671,7 @@ var PiggyBanks = {
             THOUGHT_HEIGHT = QUARTER_WIDTH + 2 * COIN_PADDING;
         }
         $('#game').css('height', STAGE_HEIGHT + 'px').css('width', STAGE_WIDTH + 'px');
+        $('#container').css('width', STAGE_WIDTH + 'px');
 
         if (PiggyBanks.stage) {
             
