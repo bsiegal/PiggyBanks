@@ -1,7 +1,8 @@
 Piggy Banks
 ==================================================
 
-This is a money game for kids created with [KineticJS](http://www.kineticjs.com/).  It can be played using any HTML5 browser, including mobile devices.  This project has simple examples of using images, transitions,  handling mouse, touch and drag events, and handling resizing.  It also includes a custom Kinetic.Shape, the RoundedRect.
+This is a money game for kids created with [KineticJS](http://www.kineticjs.com/).  It can be played using any HTML5 browser, including mobile devices.  This project has simple examples of using images, transitions,  handling mouse, touch and drag events, and handling resizing.  It also includes a custom Kinetic.Shape, the RoundedRect.  
+Piggy Bank clip art found from [clipartist.net](http://clipartist.net/tag/piggybank/).
 
 How to play
 --------------------------------------
@@ -11,4 +12,6 @@ How to play
 * To see the contents of a piggy bank, mouseover for 2 seconds, or on a mobile device touch and hold for 2 seconds.
 
 **Play at [bsiegal.github.com/PiggyBanks](http://bsiegal.github.com/PiggyBanks).**
+
+
 
