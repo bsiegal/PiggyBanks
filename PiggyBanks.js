@@ -573,7 +573,7 @@ function Coin(/*String*/ coinType) {
 };
 
 var PiggyBanks = {
-    debug: true,
+    debug: false,
     /* Kinetic.Stage - the stage */
     stage: null,
     /* Kinetic.Layer for piggy banks */
