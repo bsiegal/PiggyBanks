@@ -292,10 +292,12 @@ function Piggy(/*String*/ label, /*int*/ x) {
         });
         PiggyBanks.dragLayer.add(text);
         PiggyBanks.dragLayer.draw();
+        
+        //text width of 'Nice job!' with attrs above will be 199
         var container = new Kinetic.RoundedRect({
-            cornerX: CENTERX - text.getTextWidth() / 2 - text.attrs.padding,
+            cornerX: CENTERX - 199 / 2 - 30, //CENTERX - text.getTextWidth() / 2 - text.attrs.padding,
             cornerY: text.attrs.y - 50, //(fontSize + 2*padding) / 2
-            width: text.getTextWidth() + 2 * text.attrs.padding,
+            width: 199 + 60, //text.getTextWidth() + 2 * text.attrs.padding,
             height: 100, //(fontSize + 2*padding)
             radius: 20, 
             fill: '#f9f685', 
@@ -306,6 +308,7 @@ function Piggy(/*String*/ label, /*int*/ x) {
         PiggyBanks.dragLayer.add(container);
         text.moveToTop();
         PiggyBanks.dragLayer.draw();
+            
         
         setTimeout(function() {
             //add play again
