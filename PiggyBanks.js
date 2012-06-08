@@ -693,7 +693,7 @@ var PiggyBanks = {
              * resize each piggy
              */
             for (var i = 0; i < PiggyBanks.piggies.length; i++) {
-                var o = PiggyBanks.piggies[i].resize();
+                PiggyBanks.piggies[i].resize();
             }
             
             /*
@@ -716,7 +716,7 @@ var PiggyBanks = {
                         c.attrs.x + c.attrs.imgWidth > PiggyBanks.changeBreaker.attrs.cornerX) {
                     c.attrs.x = PiggyBanks.changeBreaker.attrs.cornerX - c.attrs.imgWidth;
                 }
-                c.attrs.parent.x = c.attrs.x
+                c.attrs.parent.x = c.attrs.x;
                 c.attrs.parent.y = c.attrs.y;
             }
             PiggyBanks.coinLayer.draw();
